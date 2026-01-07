@@ -24,7 +24,7 @@ import cv2
 import copy
 import random
 from torchvision.transforms import v2
-from lightning.fabric import seed_everything
+import pytorch_lightning as pl
 
 notebooks_path = Path.cwd()
 repo_path = notebooks_path.parent
@@ -32,7 +32,7 @@ data_path = repo_path / 'data' / 'HematomaTruetaBasal'
 sys.path.insert(0, repo_path)
 
 seed = 42 
-seed_everything(seed)
+pl.seed_everything(seed)
 
 def find_normalization_parameters(image):
     """
@@ -84,6 +84,8 @@ def normalize_image(image_patch, parameters):
     # return (image_patch - parameters[0]) / parameters[1] 
     return minmax
 
+
+
 class PredictionDataset(Dataset):
     """
     Dataset for prediction of the model.
@@ -109,7 +111,7 @@ class PredictionDataset(Dataset):
         self.fu_path = fu_path
         self.basal_path = basal_path
         self.labels = self.md_df['label'].values  # takes the labels from the metadata as an array.
-        self.patient_id= self.md_df['patient_id'].values # get the last 3 characters of the patient id stating the number.  # get the last 3 characters of the patient id stating the number. 
+        self.patient_id= self.md_df['patient_id'].values
         self.index = self.md_df['index'].values
         self.mask = mask
         self.resize_image = resize_image
@@ -135,11 +137,13 @@ class PredictionDataset(Dataset):
                 image_path = self.image_paths[idx]
                 # if image exists return the image if not pass to other image
                 image = sitk.ReadImage(image_path)
+                image.SetDirection(np.eye(3).flatten())  # CANSUreset to identity added later
                 image = sitk.GetArrayFromImage(image)
                 image = np.array(image)
 
                 mask_path = self.mask_paths[idx]
                 mask = sitk.ReadImage(mask_path)
+                mask.SetDirection(np.eye(3).flatten()) #CANSU ADDED LATER
                 mask = sitk.GetArrayFromImage(mask)
                 mask = np.array(mask)
                 
