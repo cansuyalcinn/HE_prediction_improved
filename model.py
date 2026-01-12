@@ -373,7 +373,12 @@ class ImageClassifier3(pl.LightningModule):
             labels = [x['labels'] for x in outputs]
             patient_slice_nums = [x['patient_slice_nums'] for x in outputs]
             concat_probs = torch.cat(probs, dim=0)
-            concat_ids = torch.cat(patient_ids, dim=0)
+            # Handle both tensor and list patient_ids
+            if isinstance(patient_ids[0], torch.Tensor):
+                concat_ids = torch.cat(patient_ids, dim=0)
+            else:
+                # patient_ids is a list of lists (string IDs)
+                concat_ids = [item for sublist in patient_ids for item in sublist]
             concat_labels = torch.cat(labels, dim=0)
             concat_patient_slice_nums = torch.cat(patient_slice_nums, dim=0)
 
@@ -383,7 +388,7 @@ class ImageClassifier3(pl.LightningModule):
 
             # create a dictionary with patient ids as keys and probabilities as values
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 prob = concat_single_probs[i].item()
 
                 if patient_id not in self.patient_probs:
@@ -393,7 +398,7 @@ class ImageClassifier3(pl.LightningModule):
 
             # create a dictionary with patient ids as keys and labels as values
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 labels = concat_labels[i].item()
 
                 if patient_id not in self.patient_labels:
@@ -403,7 +408,7 @@ class ImageClassifier3(pl.LightningModule):
 
             # create a dictionary with patient ids as keys and slice numbers as values
             for i in range(len(concat_patient_slice_nums)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 patient_slice_num = concat_patient_slice_nums[i].item()
 
                 if patient_id not in self.patient_slice_nums:
@@ -469,7 +474,12 @@ class ImageClassifier3(pl.LightningModule):
             labels = [x['labels'] for x in outputs]
             patient_slice_nums = [x['patient_slice_nums'] for x in outputs]
             concat_probs = torch.cat(probs, dim=0)
-            concat_ids = torch.cat(patient_ids, dim=0)
+            # Handle both tensor and list patient_ids
+            if isinstance(patient_ids[0], torch.Tensor):
+                concat_ids = torch.cat(patient_ids, dim=0)
+            else:
+                # patient_ids is a list of lists (string IDs)
+                concat_ids = [item for sublist in patient_ids for item in sublist]
             concat_labels = torch.cat(labels, dim=0)
             concat_slice_nums = torch.cat(patient_slice_nums, dim=0)
 
@@ -478,7 +488,7 @@ class ImageClassifier3(pl.LightningModule):
             concat_single_probs = concat_probs
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 prob = concat_single_probs[i].item()
 
                 if patient_id not in self.patient_probs:
@@ -487,7 +497,7 @@ class ImageClassifier3(pl.LightningModule):
                     self.patient_probs[patient_id].append(prob)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 labels = concat_labels[i].item()
 
                 if patient_id not in self.patient_labels:
@@ -496,7 +506,7 @@ class ImageClassifier3(pl.LightningModule):
                     self.patient_labels[patient_id].append(labels)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 slice_num = concat_slice_nums[i].item()
 
                 if patient_id not in self.patient_slice_nums:
@@ -591,7 +601,17 @@ class ImageClassifier3(pl.LightningModule):
             patient_slice_nums = [x['patient_slice_nums'] for x in outputs]
 
             concat_probs = torch.cat(probs, dim=0)
-            concat_ids = torch.cat(patient_ids, dim=0)
+            # Handle both tensor and list patient_ids
+            if isinstance(patient_ids[0], torch.Tensor):
+                # Handle both tensor and list patient_ids
+                if isinstance(patient_ids[0], torch.Tensor):
+                    concat_ids = torch.cat(patient_ids, dim=0)
+                else:
+                    # patient_ids is a list of lists (string IDs)
+                    concat_ids = [item for sublist in patient_ids for item in sublist]
+            else:
+                # patient_ids is a list of lists (string IDs)
+                concat_ids = [item for sublist in patient_ids for item in sublist]
             concat_labels = torch.cat(labels, dim=0)
             concat_patient_slice_nums = torch.cat(patient_slice_nums, dim=0)
             concat_patient_slice_nums = concat_patient_slice_nums + 1 # add 1 to the slice numbers to make them start from 1 instead of 0
@@ -601,7 +621,7 @@ class ImageClassifier3(pl.LightningModule):
             concat_single_probs = concat_probs
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i] if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 prob = concat_single_probs[i].item()
 
                 if patient_id not in self.patient_probs:
@@ -610,7 +630,7 @@ class ImageClassifier3(pl.LightningModule):
                     self.patient_probs[patient_id].append(prob)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i] if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 labels = concat_labels[i].item()
 
                 if patient_id not in self.patient_labels:
@@ -619,7 +639,7 @@ class ImageClassifier3(pl.LightningModule):
                     self.patient_labels[patient_id].append(labels)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i] if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 patient_slice_num = concat_patient_slice_nums[i].item()
 
                 if patient_id not in self.patient_slice_nums:
@@ -1078,7 +1098,12 @@ class ImageClassifier2(pl.LightningModule):
             labels = [x['labels'] for x in outputs]
             patient_slice_nums = [x['patient_slice_nums'] for x in outputs]
             concat_probs = torch.cat(probs, dim=0)
-            concat_ids = torch.cat(patient_ids, dim=0)
+            # Handle both tensor and list patient_ids
+            if isinstance(patient_ids[0], torch.Tensor):
+                concat_ids = torch.cat(patient_ids, dim=0)
+            else:
+                # patient_ids is a list of lists (string IDs)
+                concat_ids = [item for sublist in patient_ids for item in sublist]
             concat_labels = torch.cat(labels, dim=0)
             concat_patient_slice_nums = torch.cat(patient_slice_nums, dim=0)
 
@@ -1088,7 +1113,7 @@ class ImageClassifier2(pl.LightningModule):
 
             # create a dictionary with patient ids as keys and probabilities as values
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 prob = concat_single_probs[i].item()
 
                 if patient_id not in self.patient_probs:
@@ -1098,7 +1123,7 @@ class ImageClassifier2(pl.LightningModule):
 
             # create a dictionary with patient ids as keys and labels as values
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 labels = concat_labels[i].item()
 
                 if patient_id not in self.patient_labels:
@@ -1108,7 +1133,7 @@ class ImageClassifier2(pl.LightningModule):
 
             # create a dictionary with patient ids as keys and slice numbers as values
             for i in range(len(concat_patient_slice_nums)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 patient_slice_num = concat_patient_slice_nums[i].item()
 
                 if patient_id not in self.patient_slice_nums:
@@ -1174,7 +1199,12 @@ class ImageClassifier2(pl.LightningModule):
             labels = [x['labels'] for x in outputs]
             patient_slice_nums = [x['patient_slice_nums'] for x in outputs]
             concat_probs = torch.cat(probs, dim=0)
-            concat_ids = torch.cat(patient_ids, dim=0)
+            # Handle both tensor and list patient_ids
+            if isinstance(patient_ids[0], torch.Tensor):
+                concat_ids = torch.cat(patient_ids, dim=0)
+            else:
+                # patient_ids is a list of lists (string IDs)
+                concat_ids = [item for sublist in patient_ids for item in sublist]
             concat_labels = torch.cat(labels, dim=0)
             concat_slice_nums = torch.cat(patient_slice_nums, dim=0)
 
@@ -1183,7 +1213,7 @@ class ImageClassifier2(pl.LightningModule):
             concat_single_probs = concat_probs
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 prob = concat_single_probs[i].item()
 
                 if patient_id not in self.patient_probs:
@@ -1192,7 +1222,7 @@ class ImageClassifier2(pl.LightningModule):
                     self.patient_probs[patient_id].append(prob)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 labels = concat_labels[i].item()
 
                 if patient_id not in self.patient_labels:
@@ -1201,7 +1231,7 @@ class ImageClassifier2(pl.LightningModule):
                     self.patient_labels[patient_id].append(labels)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 slice_num = concat_slice_nums[i].item()
 
                 if patient_id not in self.patient_slice_nums:
@@ -1313,7 +1343,12 @@ class ImageClassifier2(pl.LightningModule):
             patient_slice_nums = [x['patient_slice_nums'] for x in outputs]
 
             concat_probs = torch.cat(probs, dim=0)
-            concat_ids = torch.cat(patient_ids, dim=0)
+            # Handle both tensor and list patient_ids
+            if isinstance(patient_ids[0], torch.Tensor):
+                concat_ids = torch.cat(patient_ids, dim=0)
+            else:
+                # patient_ids is a list of lists (string IDs)
+                concat_ids = [item for sublist in patient_ids for item in sublist]
             concat_labels = torch.cat(labels, dim=0)
             concat_patient_slice_nums = torch.cat(patient_slice_nums, dim=0)
             concat_patient_slice_nums = concat_patient_slice_nums + 1 # add 1 to the slice numbers to make them start from 1 instead of 0
@@ -1323,7 +1358,7 @@ class ImageClassifier2(pl.LightningModule):
             concat_single_probs = concat_probs
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 prob = concat_single_probs[i].item()
 
                 if patient_id not in self.patient_probs:
@@ -1332,7 +1367,7 @@ class ImageClassifier2(pl.LightningModule):
                     self.patient_probs[patient_id].append(prob)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 labels = concat_labels[i].item()
 
                 if patient_id not in self.patient_labels:
@@ -1341,7 +1376,7 @@ class ImageClassifier2(pl.LightningModule):
                     self.patient_labels[patient_id].append(labels)
 
             for i in range(len(concat_ids)):
-                patient_id = concat_ids[i].item()
+                patient_id = concat_ids[i].item() if isinstance(concat_ids, torch.Tensor) else concat_ids[i]
                 patient_slice_num = concat_patient_slice_nums[i].item()
 
                 if patient_id not in self.patient_slice_nums:

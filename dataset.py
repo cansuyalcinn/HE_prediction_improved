@@ -34,6 +34,7 @@ sys.path.insert(0, repo_path)
 seed = 42 
 pl.seed_everything(seed)
 
+
 def find_normalization_parameters(image):
     """
     It takes an image and returns the mean and standard deviation of the image.
@@ -136,16 +137,30 @@ class PredictionDataset(Dataset):
                 # load image
                 image_path = self.image_paths[idx]
                 # if image exists return the image if not pass to other image
-                image = sitk.ReadImage(image_path)
-                image.SetDirection(np.eye(3).flatten())  # CANSUreset to identity added later
-                image = sitk.GetArrayFromImage(image)
-                image = np.array(image)
+                try:
+                    image = sitk.ReadImage(image_path)
+                    image.SetDirection(np.eye(3).flatten())  # CANSUreset to identity added later
+                    image = sitk.GetArrayFromImage(image)
+                    image = np.array(image)
+                except RuntimeError as e:
+                    if "orthonormal" in str(e).lower():
+                        # Return None to signal this sample should be skipped
+                        return None
+                    else:
+                        raise
 
                 mask_path = self.mask_paths[idx]
-                mask = sitk.ReadImage(mask_path)
-                mask.SetDirection(np.eye(3).flatten()) #CANSU ADDED LATER
-                mask = sitk.GetArrayFromImage(mask)
-                mask = np.array(mask)
+                try:
+                    mask = sitk.ReadImage(mask_path)
+                    mask.SetDirection(np.eye(3).flatten()) #CANSU ADDED LATER
+                    mask = sitk.GetArrayFromImage(mask)
+                    mask = np.array(mask)
+                except RuntimeError as e:
+                    if "orthonormal" in str(e).lower():
+                        # Return None to signal this sample should be skipped
+                        return None
+                    else:
+                        raise
                 
                 # load label
                 label = self.labels[idx]
@@ -156,9 +171,16 @@ class PredictionDataset(Dataset):
             else:
                 # load image
                 image_path = self.image_paths[idx]
-                image = sitk.ReadImage(image_path)
-                image = sitk.GetArrayFromImage(image)
-                image = np.array(image)
+                try:
+                    image = sitk.ReadImage(image_path)
+                    image = sitk.GetArrayFromImage(image)
+                    image = np.array(image)
+                except RuntimeError as e:
+                    if "orthonormal" in str(e).lower():
+                        # Return None to signal this sample should be skipped
+                        return None
+                    else:
+                        raise
 
                 # load label
                 label = self.labels[idx]
@@ -261,7 +283,7 @@ class PredictionDataset2D(Dataset):
     
     def __getitem__(self, idx):
 
-        id_value = self.patient_ids[idx].item()
+        id_value = self.patient_ids[idx]
         slice_number = self.slice_number[idx].item()
         combined_number = str(id_value) + str(slice_number)
 
@@ -463,14 +485,17 @@ class HEPredDataModule(pl.LightningDataModule):
             filtered_slices = slices[lesion_slices]
             filtered_masks = mask[lesion_slices]
             filtered_labels = labels[lesion_slices]
-            filtered_ids = patient_ids[lesion_slices]
+            # Handle both tensor/array and list patient_ids
+            if isinstance(patient_ids, list):
+                filtered_ids = [patient_ids[i] for i in lesion_slices]
+            else:
+                filtered_ids = patient_ids[lesion_slices]
             filtered_slice_numbers = slice_numbers[lesion_slices]
 
             # convert the slices to tensor
             filtered_slices= filtered_slices.clone().detach()
             filtered_masks= filtered_masks.clone().detach()
             filtered_labels= filtered_labels.clone().detach()
-            filtered_ids= filtered_ids.clone().detach()
             filtered_slice_numbers= filtered_slice_numbers.clone().detach()
             
             return filtered_slices, filtered_masks, filtered_labels, filtered_ids, filtered_slice_numbers
